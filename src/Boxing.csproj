@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>1.0.1</VersionPrefix>
     <Copyright>Copyright © 2018 Atif Aziz. All rights reserved.</Copyright>
     <Description>A .NET Standard library for boxing any value.</Description>
     <Authors>Atif Aziz</Authors>
