@@ -13,6 +13,12 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void Value()
+        {
+            Assert.That(Box.Value(new Box<int>(42)), Is.EqualTo(42));
+        }
+
+        [Test]
         public void ImplicitConversionFrom()
         {
             Box<int> x = 42;

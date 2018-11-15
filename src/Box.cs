@@ -23,6 +23,8 @@ namespace Boxing
     {
         public static Box<T> Return<T>(T value) => new Box<T>(value);
 
+        public static T Value<T>(Box<T> box) => box.Value;
+
         public static Box<TResult> Bind<T, TResult>(this Box<T> box, Func<T, Box<TResult>> function)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
