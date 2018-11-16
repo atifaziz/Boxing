@@ -25,10 +25,10 @@ namespace Boxing
 
         public static T Value<T>(Box<T> box) => box.Value;
 
-        public static TResult Run<T, TResult>(T arg, Func<Box<T>, Box<TResult>> computation)
+        public static TResult RunMap<T, TResult>(T arg, Func<Box<T>, Box<TResult>> mapper)
         {
-            if (computation == null) throw new ArgumentNullException(nameof(computation));
-            return computation(arg).Value;
+            if (mapper == null) throw new ArgumentNullException(nameof(mapper));
+            return mapper(arg).Value;
         }
 
         public static Box<TResult> Bind<T, TResult>(this Box<T> box, Func<T, Box<TResult>> function)

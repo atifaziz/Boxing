@@ -19,17 +19,17 @@ namespace Boxing.Tests
         }
 
         [Test]
-        public void RunWithNullComputation()
+        public void RunMapWithNullComputation()
         {
             var e = Assert.Throws<ArgumentNullException>(() =>
-                Box.Run<int, object>(42, null));
+                Box.RunMap<int, object>(42, null));
             Assert.That(e.ParamName, Is.EqualTo("computation"));
         }
 
         [Test]
-        public void Run()
+        public void RunMap()
         {
-            Assert.That(Box.Run(40, x => Box.Return(x.Value + 2)), Is.EqualTo(42));
+            Assert.That(Box.RunMap(40, x => Box.Return(x.Value + 2)), Is.EqualTo(42));
         }
 
         [Test]
