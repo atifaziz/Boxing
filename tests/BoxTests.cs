@@ -19,6 +19,20 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void RunWithNullComputation()
+        {
+            var e = Assert.Throws<ArgumentNullException>(() =>
+                Box.Run<int, object>(42, null));
+            Assert.That(e.ParamName, Is.EqualTo("computation"));
+        }
+
+        [Test]
+        public void Run()
+        {
+            Assert.That(Box.Run(40, x => Box.Return(x.Value + 2)), Is.EqualTo(42));
+        }
+
+        [Test]
         public void ImplicitConversionFrom()
         {
             Box<int> x = 42;
