@@ -31,7 +31,7 @@ namespace Boxing.Linq
             return box.FlatMap(secondSelector, resultSelector);
         }
 
-        public static Box<TResult>Select<T, TResult>(this Box<T> box, Func<T, TResult> selector)
+        public static Box<TResult> Select<T, TResult>(this Box<T> box, Func<T, TResult> selector)
         {
             if (selector == null) throw new ArgumentNullException(nameof(selector));
             return box.Map(selector);
