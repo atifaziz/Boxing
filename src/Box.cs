@@ -76,7 +76,7 @@ namespace Boxing
             Enumerable.Repeat(box.Value, 1);
     }
 
-    partial struct Box<T> : IEquatable<Box<T>>
+    readonly partial struct Box<T> : IEquatable<Box<T>>
     {
         public readonly T Value;
 
