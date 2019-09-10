@@ -72,11 +72,71 @@ namespace Boxing
         public static Box<TResult> Apply<T1, T2, TResult>(this Box<Func<T1, T2, TResult>> function, Box<T1> a, Box<T2> b) =>
             function.Bind(f => Return(f(a.Value, b.Value)));
 
-        public static EnumerableBox<T> ToEnumerable<T>(this Box<T> box) =>
-            new EnumerableBox<T>(box.Value);
+        public static Enumerable<T> ToEnumerable<T>(this Box<T> box) =>
+            new Enumerable<T>(box.Value);
 
-        public static ObservableBox<T> ToObservable<T>(this Box<T> box) =>
-            new ObservableBox<T>(box.Value);
+        public static Observable<T> ToObservable<T>(this Box<T> box) =>
+            new Observable<T>(box.Value);
+
+        public readonly struct Enumerable<T> : IEnumerable<T>
+        {
+            readonly T _value;
+
+            public Enumerable(T value) => _value = value;
+
+            public Enumerator GetEnumerator() => new Enumerator(_value);
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+            public struct Enumerator : IEnumerator<T>
+            {
+                enum State { Initial, Value, Ended }
+
+                State _state;
+                readonly T _value;
+
+                internal Enumerator(T value) : this() => _value = value;
+
+                public bool MoveNext()
+                {
+                    switch (_state)
+                    {
+                        case State.Initial: _state = State.Value; return true;
+                        case State.Value  : _state = State.Ended; return false;
+                        default           : return false;
+                    }
+                }
+
+                public void Reset() { _state = State.Initial; }
+
+                public T Current => _state == State.Value ? _value : throw new InvalidOperationException();
+
+                object IEnumerator.Current => Current;
+
+                void IDisposable.Dispose() {}
+            }
+        }
+
+        public readonly struct Observable<T> : IObservable<T>
+        {
+            readonly T _value;
+
+            public Observable(T value) => _value = value;
+
+            public IDisposable Subscribe(IObserver<T> observer)
+            {
+                observer.OnNext(_value);
+                observer.OnCompleted();
+                return Disposable.Nop;
+            }
+        }
+
+        static class Disposable
+        {
+            public static readonly IDisposable Nop = new NopDisposable();
+            sealed class NopDisposable : IDisposable { public void Dispose() {} }
+        }
     }
 
     readonly partial struct Box<T> : IEquatable<Box<T>>
@@ -101,65 +161,5 @@ namespace Boxing
 
         public static bool operator ==(Box<T> left, Box<T> right) => left.Equals(right);
         public static bool operator !=(Box<T> left, Box<T> right) => !left.Equals(right);
-    }
-
-    readonly partial struct EnumerableBox<T> : IEnumerable<T>
-    {
-        readonly T _value;
-
-        public EnumerableBox(T value) => _value = value;
-
-        public Enumerator GetEnumerator() => new Enumerator(_value);
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-
-        public struct Enumerator : IEnumerator<T>
-        {
-            enum State { Initial, Value, Ended }
-
-            State _state;
-            readonly T _value;
-
-            internal Enumerator(T value) : this() => _value = value;
-
-            public bool MoveNext()
-            {
-                switch (_state)
-                {
-                    case State.Initial: _state = State.Value; return true;
-                    case State.Value  : _state = State.Ended; return false;
-                    default           : return false;
-                }
-            }
-
-            public void Reset() { _state = State.Initial; }
-
-            public T Current => _state == State.Value ? _value : throw new InvalidOperationException();
-
-            object IEnumerator.Current => Current;
-
-            void IDisposable.Dispose() {}
-        }
-    }
-
-    readonly partial struct ObservableBox<T> : IObservable<T>
-    {
-        readonly T _value;
-
-        public ObservableBox(T value) => _value = value;
-
-        public IDisposable Subscribe(IObserver<T> observer)
-        {
-            observer.OnNext(_value);
-            observer.OnCompleted();
-            return Disposable.Nop;
-        }
-    }
-
-    static class Disposable
-    {
-        public static readonly IDisposable Nop = new NopDisposable();
-        sealed class NopDisposable : IDisposable { public void Dispose() {} }
     }
 }
