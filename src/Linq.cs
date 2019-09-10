@@ -17,6 +17,8 @@
 namespace Boxing.Linq
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     static partial class BoxQueryExtensions
     {
@@ -29,6 +31,19 @@ namespace Boxing.Linq
             if (secondSelector == null) throw new ArgumentNullException(nameof(secondSelector));
             if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return box.FlatMap(secondSelector, resultSelector);
+        }
+
+        public static IEnumerable<TResult>
+            SelectMany<TFirst, TSecond, TResult>(
+                this Box<TFirst> box,
+                Func<TFirst, IEnumerable<TSecond>> secondSelector,
+                Func<TFirst, TSecond, TResult> resultSelector)
+        {
+            if (secondSelector == null) throw new ArgumentNullException(nameof(secondSelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return from x in box.ToEnumerable()
+                   from y in secondSelector(x)
+                   select resultSelector(x, y);
         }
 
         public static Box<TResult> Select<T, TResult>(this Box<T> box, Func<T, TResult> selector)

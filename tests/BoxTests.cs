@@ -1,6 +1,8 @@
 namespace Boxing.Tests
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using NUnit.Framework;
     using Linq;
 
@@ -216,19 +218,54 @@ namespace Boxing.Tests
         }
 
         [Test]
-        public void SelectManyWithNullSecondSelector()
+        public void SelectManyBoxWithNullSecondSelector()
         {
             AssertThrowsNullArgumentException("secondSelector", () =>
                 Box.Return(0)
-                   .SelectMany<int, object, object>(null, (x, y) => throw new NotImplementedException()));
+                   .SelectMany((Func<int, Box<object>>)null, BreakingFunc.Of<int, object, object>()));
         }
 
         [Test]
-        public void SelectManyWithNullResultSelector()
+        public void SelectManyBoxWithNullResultSelector()
         {
             AssertThrowsNullArgumentException("resultSelector", () =>
                 Box.Return(0)
-                   .SelectMany<int, object, object>(_ => throw new NotImplementedException(), null));
+                   .SelectMany(BreakingFunc.Of<int, Box<object>>(),
+                               (Func<int, object, object>)null));
+        }
+
+        [Test]
+        public void SelectManyWithSequence()
+        {
+            var result =
+                from x in Box.Return(42)
+                from y in Enumerable.Range(1, 3)
+                select x * y;
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                42 * 1,
+                42 * 2,
+                42 * 3,
+            }));
+        }
+
+        [Test]
+        public void SelectManySequenceWithNullSecondSelector()
+        {
+            AssertThrowsNullArgumentException("secondSelector", () =>
+                Box.Return(0)
+                   .SelectMany((Func<int, IEnumerable<object>>)null,
+                               BreakingFunc.Of<int, object, object>()));
+        }
+
+        [Test]
+        public void SelectManySequenceWithNullResultSelector()
+        {
+            AssertThrowsNullArgumentException("resultSelector", () =>
+                Box.Return(0)
+                   .SelectMany(BreakingFunc.Of<int, IEnumerable<object>>(),
+                               (Func<int, object, object>)null));
         }
 
         static void AssertThrowsNullArgumentException(string name, TestDelegate action)
