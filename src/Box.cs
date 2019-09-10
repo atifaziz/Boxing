@@ -20,6 +20,30 @@ namespace Boxing
     using System.Collections;
     using System.Collections.Generic;
 
+    readonly partial struct Box<T> : IEquatable<Box<T>>
+    {
+        public readonly T Value;
+
+        public Box(T value) => Value = value;
+
+        public override bool Equals(object obj)
+            => obj is Box<T> other && Equals(other);
+
+        public bool Equals(Box<T> other) =>
+            EqualityComparer<T>.Default.Equals(Value, other.Value);
+
+        public override int GetHashCode() =>
+            EqualityComparer<T>.Default.GetHashCode(Value);
+
+        public override string ToString() => $"{Value}";
+
+        public static implicit operator Box<T>(T value) => new Box<T>(value);
+        public static implicit operator T(Box<T> box) => box.Value;
+
+        public static bool operator ==(Box<T> left, Box<T> right) => left.Equals(right);
+        public static bool operator !=(Box<T> left, Box<T> right) => !left.Equals(right);
+    }
+
     static partial class Box
     {
         public static Box<T> Return<T>(T value) => new Box<T>(value);
@@ -137,29 +161,5 @@ namespace Boxing
             public static readonly IDisposable Nop = new NopDisposable();
             sealed class NopDisposable : IDisposable { public void Dispose() {} }
         }
-    }
-
-    readonly partial struct Box<T> : IEquatable<Box<T>>
-    {
-        public readonly T Value;
-
-        public Box(T value) => Value = value;
-
-        public override bool Equals(object obj)
-            => obj is Box<T> other && Equals(other);
-
-        public bool Equals(Box<T> other) =>
-            EqualityComparer<T>.Default.Equals(Value, other.Value);
-
-        public override int GetHashCode() =>
-            EqualityComparer<T>.Default.GetHashCode(Value);
-
-        public override string ToString() => $"{Value}";
-
-        public static implicit operator Box<T>(T value) => new Box<T>(value);
-        public static implicit operator T(Box<T> box) => box.Value;
-
-        public static bool operator ==(Box<T> left, Box<T> right) => left.Equals(right);
-        public static bool operator !=(Box<T> left, Box<T> right) => !left.Equals(right);
     }
 }
