@@ -190,6 +190,23 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void ToObservable()
+        {
+            var result = new List<int>();
+            var error = (Exception)null;
+            var completed = false;
+
+            Box.Return(42)
+               .ToObservable()
+               .Subscribe(x => result.Add(x), e => error = e, () => completed = true)
+               .Dispose();
+
+            Assert.That(result, Is.EqualTo(new[] { 42 }));
+            Assert.That(completed, Is.True);
+            Assert.That(error, Is.Null);
+        }
+
+        [Test]
         public void Select()
         {
             var result =

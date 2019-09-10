@@ -74,6 +74,9 @@ namespace Boxing
 
         public static IEnumerable<T> ToEnumerable<T>(this Box<T> box) =>
             Enumerable.Repeat(box.Value, 1);
+
+        public static ObservableBox<T> ToObservable<T>(this Box<T> box) =>
+            new ObservableBox<T>(box.Value);
     }
 
     readonly partial struct Box<T> : IEquatable<Box<T>>
@@ -98,5 +101,26 @@ namespace Boxing
 
         public static bool operator ==(Box<T> left, Box<T> right) => left.Equals(right);
         public static bool operator !=(Box<T> left, Box<T> right) => !left.Equals(right);
+    }
+
+    readonly partial struct ObservableBox<T> : IObservable<T>
+    {
+        readonly T _value;
+
+        public ObservableBox(T value) =>
+            _value = value;
+
+        public IDisposable Subscribe(IObserver<T> observer)
+        {
+            observer.OnNext(_value);
+            observer.OnCompleted();
+            return Disposable.Nop;
+        }
+    }
+
+    static class Disposable
+    {
+        public static readonly IDisposable Nop = new NopDisposable();
+        sealed class NopDisposable : IDisposable { public void Dispose() {} }
     }
 }
