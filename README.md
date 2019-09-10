@@ -48,5 +48,12 @@ var calc =
 Console.WriteLine(calc.Apply(Console.In));
 ```
 
+A `Box<>` can be converted to:
+
+- a [sequence] (`IEnumerable<>`) via `ToEnumerable`
+- an [observable] (`IObservable<>`) via `ToObservable`
+
 
 [pkg]: https://www.nuget.org/packages/Boxing/
+[sequence]: https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1
+[observable]: https://docs.microsoft.com/en-us/dotnet/api/system.iobservable-1
