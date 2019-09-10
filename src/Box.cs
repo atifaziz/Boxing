@@ -18,6 +18,7 @@ namespace Boxing
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     static partial class Box
     {
@@ -70,6 +71,9 @@ namespace Boxing
 
         public static Box<TResult> Apply<T1, T2, TResult>(this Box<Func<T1, T2, TResult>> function, Box<T1> a, Box<T2> b) =>
             function.Bind(f => Return(f(a.Value, b.Value)));
+
+        public static IEnumerable<T> ToEnumerable<T>(this Box<T> box) =>
+            Enumerable.Repeat(box.Value, 1);
     }
 
     partial struct Box<T> : IEquatable<Box<T>>

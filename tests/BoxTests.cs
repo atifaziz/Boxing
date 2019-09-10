@@ -181,6 +181,13 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void ToEnumerable()
+        {
+            var result = Box.Return(42).ToEnumerable();
+            Assert.That(result, Is.EqualTo(new[] { 42 }));
+        }
+
+        [Test]
         public void Select()
         {
             var result =
