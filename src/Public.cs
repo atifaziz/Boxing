@@ -1,3 +1,5 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Boxing.Tests")]
+
 namespace Boxing
 {
     public partial class Box {}
