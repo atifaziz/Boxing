@@ -19,6 +19,7 @@ namespace Boxing.Linq
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Reactive;
 
     static partial class BoxQueryExtensions
     {
@@ -44,6 +45,24 @@ namespace Boxing.Linq
             return from x in box.ToEnumerable()
                    from y in secondSelector(x)
                    select resultSelector(x, y);
+        }
+
+        public static IObservable<TResult>
+            SelectMany<TFirst, TSecond, TResult>(
+                this Box<TFirst> box,
+                Func<TFirst, IObservable<TSecond>> secondSelector,
+                Func<TFirst, TSecond, TResult> resultSelector)
+        {
+            if (secondSelector == null) throw new ArgumentNullException(nameof(secondSelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+
+            return
+                Observable.Create<TResult>(observer =>
+                    secondSelector(box.Value)
+                        .Subscribe(
+                            onError: observer.OnError,
+                            onCompleted: observer.OnCompleted,
+                            onNext: second => observer.OnNext(resultSelector(box.Value, second))));
         }
 
         public static Box<TResult> Select<T, TResult>(this Box<T> box, Func<T, TResult> selector)

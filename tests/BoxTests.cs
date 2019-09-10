@@ -6,6 +6,7 @@ namespace Boxing.Tests
     using System.Linq;
     using NUnit.Framework;
     using Linq;
+    using Reactive;
 
     public class BoxTests
     {
@@ -102,7 +103,7 @@ namespace Boxing.Tests
         [Test]
         public void BindWithNullFunction()
         {
-            AssertThrowsNullArgumentException("function", () =>
+            AssertThrows.ArgumentNullException("function", () =>
                 Box.Return(0).Bind<int, object>(null));
         }
 
@@ -116,7 +117,7 @@ namespace Boxing.Tests
         [Test]
         public void MapWithNullMapper()
         {
-            AssertThrowsNullArgumentException("mapper", () =>
+            AssertThrows.ArgumentNullException("mapper", () =>
                 Box.Return(0).Map<int, object>(null));
         }
 
@@ -131,7 +132,7 @@ namespace Boxing.Tests
         [Test]
         public void FlatMapWithNullMapper()
         {
-            AssertThrowsNullArgumentException("mapper", () =>
+            AssertThrows.ArgumentNullException("mapper", () =>
                 Box.Return(0)
                    .FlatMap<int, object, object>(null, (x, y) => throw new NotImplementedException()));
         }
@@ -139,7 +140,7 @@ namespace Boxing.Tests
         [Test]
         public void FlatMapWithNullResultor()
         {
-            AssertThrowsNullArgumentException("resultor", () =>
+            AssertThrows.ArgumentNullException("resultor", () =>
                 Box.Return(0)
                    .FlatMap<int, object, object>(_ => throw new NotImplementedException(), null));
         }
@@ -147,19 +148,19 @@ namespace Boxing.Tests
         [Test]
         public void DeferWithNull()
         {
-            AssertThrowsNullArgumentException("function", () => Box.Defer<object>(null));
+            AssertThrows.ArgumentNullException("function", () => Box.Defer<object>(null));
         }
 
         [Test]
         public void Defer1WithNull()
         {
-            AssertThrowsNullArgumentException("function", () => Box.Defer<object, object>(null));
+            AssertThrows.ArgumentNullException("function", () => Box.Defer<object, object>(null));
         }
 
         [Test]
         public void Defer2WithNull()
         {
-            AssertThrowsNullArgumentException("function", () => Box.Defer<object, object, object>(null));
+            AssertThrows.ArgumentNullException("function", () => Box.Defer<object, object, object>(null));
         }
 
         [Test]
@@ -254,34 +255,20 @@ namespace Boxing.Tests
         [Test]
         public void ToObservable()
         {
-            var result = new List<int>();
-            var error = (Exception)null;
-            var completed = false;
-
             Box.Return(42)
                .ToObservable()
-               .Subscribe(x => result.Add(x), e => error = e, () => completed = true)
-               .Dispose();
-
-            Assert.That(result, Is.EqualTo(new[] { 42 }));
-            Assert.That(completed, Is.True);
-            Assert.That(error, Is.Null);
+               .AssertThat(error: Is.Null,
+                           completed: Is.True,
+                           observations: Is.EqualTo(new[] { 42 }));
         }
 
         [Test]
         public void DefaultObservation()
         {
-            var result = new List<int>();
-            var error = (Exception)null;
-            var completed = false;
-
             new Box.Observable<int>()
-               .Subscribe(x => result.Add(x), e => error = e, () => completed = true)
-               .Dispose();
-
-            Assert.That(result, Is.EqualTo(new[] { 0 }));
-            Assert.That(completed, Is.True);
-            Assert.That(error, Is.Null);
+               .AssertThat(error: Is.Null,
+                           completed: Is.True,
+                           observations: Is.EqualTo(new[] { 0 }));
         }
 
         [Test]
@@ -297,7 +284,7 @@ namespace Boxing.Tests
         [Test]
         public void SelectWithNullSelector()
         {
-            AssertThrowsNullArgumentException("selector", () =>
+            AssertThrows.ArgumentNullException("selector", () =>
                 Box.Return(0).Select<int, object>(null));
         }
 
@@ -315,7 +302,7 @@ namespace Boxing.Tests
         [Test]
         public void SelectManyBoxWithNullSecondSelector()
         {
-            AssertThrowsNullArgumentException("secondSelector", () =>
+            AssertThrows.ArgumentNullException("secondSelector", () =>
                 Box.Return(0)
                    .SelectMany((Func<int, Box<object>>)null, BreakingFunc.Of<int, object, object>()));
         }
@@ -323,7 +310,7 @@ namespace Boxing.Tests
         [Test]
         public void SelectManyBoxWithNullResultSelector()
         {
-            AssertThrowsNullArgumentException("resultSelector", () =>
+            AssertThrows.ArgumentNullException("resultSelector", () =>
                 Box.Return(0)
                    .SelectMany(BreakingFunc.Of<int, Box<object>>(),
                                (Func<int, object, object>)null));
@@ -348,7 +335,7 @@ namespace Boxing.Tests
         [Test]
         public void SelectManySequenceWithNullSecondSelector()
         {
-            AssertThrowsNullArgumentException("secondSelector", () =>
+            AssertThrows.ArgumentNullException("secondSelector", () =>
                 Box.Return(0)
                    .SelectMany((Func<int, IEnumerable<object>>)null,
                                BreakingFunc.Of<int, object, object>()));
@@ -357,16 +344,52 @@ namespace Boxing.Tests
         [Test]
         public void SelectManySequenceWithNullResultSelector()
         {
-            AssertThrowsNullArgumentException("resultSelector", () =>
+            AssertThrows.ArgumentNullException("resultSelector", () =>
                 Box.Return(0)
                    .SelectMany(BreakingFunc.Of<int, IEnumerable<object>>(),
                                (Func<int, object, object>)null));
         }
 
-        static void AssertThrowsNullArgumentException(string name, TestDelegate action)
+        [Test]
+        public void SelectManyWithObservable()
         {
-            var e = Assert.Throws<ArgumentNullException>(action);
-            Assert.That(e.ParamName, Is.EqualTo(name));
+            var q =
+                from x in Box.Return(42)
+                from y in Observable.Create<int>(observer =>
+                {
+                    foreach (var y in new[] { 1, 2, 3 })
+                        observer.OnNext(y);
+                    observer.OnCompleted();
+                    return Disposable.Nop;
+                })
+                select x * y;
+
+            q.AssertThat(error: Is.Null,
+                         completed: Is.True,
+                         observations: Is.EqualTo(new[]
+                         {
+                            42 * 1,
+                            42 * 2,
+                            42 * 3,
+                         }));
+        }
+
+        [Test]
+        public void SelectManyObservableWithNullSecondSelector()
+        {
+            AssertThrows.ArgumentNullException("secondSelector", () =>
+                Box.Return(0)
+                   .SelectMany((Func<int, IObservable<object>>)null,
+                               BreakingFunc.Of<int, object, object>()));
+        }
+
+        [Test]
+        public void SelectManyObservableWithNullResultSelector()
+        {
+            AssertThrows.ArgumentNullException("resultSelector", () =>
+                Box.Return(0)
+                   .SelectMany(BreakingFunc.Of<int, IObservable<object>>(),
+                               (Func<int, object, object>)null));
         }
     }
 }
