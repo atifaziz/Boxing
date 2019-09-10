@@ -190,6 +190,47 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void MovePastEndOfSequence()
+        {
+            var enumerator = Box.Return(42).ToEnumerable().GetEnumerator();
+            Assert.That(enumerator.MoveNext(), Is.True);
+            Assert.That(enumerator.MoveNext(), Is.False);
+            Assert.That(enumerator.MoveNext(), Is.False);
+        }
+
+        [Test]
+        public void UseCurrentBeforeMoveNext()
+        {
+            var enumerator = Box.Return(42).ToEnumerable().GetEnumerator();
+            Assert.Throws<InvalidOperationException>(() => { var _ = enumerator.Current; });
+        }
+
+        [Test]
+        public void UseCurrentAfterIterationHasCompleted()
+        {
+            var enumerator = Box.Return(42).ToEnumerable().GetEnumerator();
+            Assert.That(enumerator.MoveNext(), Is.True);
+            Assert.That(enumerator.Current, Is.EqualTo(42));
+            Assert.That(enumerator.MoveNext(), Is.False);
+
+            Assert.Throws<InvalidOperationException>(() => { var _ = enumerator.Current; });
+        }
+
+        [Test]
+        public void ResetIterator()
+        {
+            var enumerator = Box.Return(42).ToEnumerable().GetEnumerator();
+
+            for (var i = 0; i < 2; i++)
+            {
+                Assert.That(enumerator.MoveNext(), Is.True);
+                Assert.That(enumerator.Current, Is.EqualTo(42));
+                Assert.That(enumerator.MoveNext(), Is.False);
+                enumerator.Reset();
+            }
+        }
+
+        [Test]
         public void ToObservable()
         {
             var result = new List<int>();
