@@ -115,7 +115,7 @@ namespace Boxing
 
             public struct Enumerator : IEnumerator<T>
             {
-                enum State { Initial, Value, Ended }
+                enum State { Initial, Value, End }
 
                 State _state;
                 readonly T _value;
@@ -127,7 +127,7 @@ namespace Boxing
                     switch (_state)
                     {
                         case State.Initial: _state = State.Value; return true;
-                        case State.Value  : _state = State.Ended; return false;
+                        case State.Value  : _state = State.End; return false;
                         default           : return false;
                     }
                 }
