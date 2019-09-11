@@ -127,16 +127,15 @@ namespace Boxing
                     switch (_state)
                     {
                         case State.Initial: _state = State.Value; return true;
-                        case State.Value  : _state = State.End; return false;
+                        case State.Value  : _state = State.End  ; return false;
                         default           : return false;
                     }
                 }
 
-                public void Reset() { _state = State.Initial; }
-
-                public T Current => _state == State.Value ? _value : throw new InvalidOperationException();
-
                 object IEnumerator.Current => Current;
+                public T Current => _state != State.Value ? Throw<T>.InvalidOperationException() : _value;
+
+                public void Reset() => _state = State.Initial;
 
                 void IDisposable.Dispose() {}
             }
@@ -161,5 +160,10 @@ namespace Boxing
             public static readonly IDisposable Nop = new NopDisposable();
             sealed class NopDisposable : IDisposable { public void Dispose() {} }
         }
+    }
+
+    static class Throw<T>
+    {
+        public static T InvalidOperationException() => throw new InvalidOperationException();
     }
 }
