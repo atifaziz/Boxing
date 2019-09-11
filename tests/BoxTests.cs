@@ -1,6 +1,7 @@
 namespace Boxing.Tests
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using NUnit.Framework;
@@ -231,6 +232,26 @@ namespace Boxing.Tests
         }
 
         [Test]
+        public void ResetBoxedIterator()
+        {
+            var enumerator = (IEnumerator)Box.Return(42).ToEnumerable().GetEnumerator();
+
+            for (var i = 0; i < 2; i++)
+            {
+                Assert.That(enumerator.MoveNext(), Is.True);
+                Assert.That(enumerator.Current, Is.EqualTo(42));
+                Assert.That(enumerator.MoveNext(), Is.False);
+                enumerator.Reset();
+            }
+        }
+
+        [Test]
+        public void DefaultEnumeration()
+        {
+            Assert.That(new Box.Enumerable<int>(), Is.EqualTo(new[] { default(int) }));
+        }
+
+        [Test]
         public void ToObservable()
         {
             var result = new List<int>();
@@ -243,6 +264,22 @@ namespace Boxing.Tests
                .Dispose();
 
             Assert.That(result, Is.EqualTo(new[] { 42 }));
+            Assert.That(completed, Is.True);
+            Assert.That(error, Is.Null);
+        }
+
+        [Test]
+        public void DefaultObservation()
+        {
+            var result = new List<int>();
+            var error = (Exception)null;
+            var completed = false;
+
+            new Box.Observable<int>()
+               .Subscribe(x => result.Add(x), e => error = e, () => completed = true)
+               .Dispose();
+
+            Assert.That(result, Is.EqualTo(new[] { 0 }));
             Assert.That(completed, Is.True);
             Assert.That(error, Is.Null);
         }
